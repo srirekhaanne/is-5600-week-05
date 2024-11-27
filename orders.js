@@ -1,4 +1,3 @@
-// orders.js
 const cuid = require('cuid')
 
 const db = require('./db')
@@ -20,11 +19,7 @@ const Order = db.model('Order', {
   }
 })
 
-/**
- * List orders
- * @param {Object} options
- * @returns {Promise<Array>}
- */
+
 async function list(options = {}) {
 
   const { offset = 0, limit = 25, productId, status } = options;
@@ -50,14 +45,8 @@ async function list(options = {}) {
   return orders
 }
 
-/**
- * Get an order
- * @param {Object} order
- * @returns {Promise<Object>}
- */
+
 async function get (_id) {
-  // using populate will automatically fetch the associated products.
-  // if you don't use populate, you will only get the product ids
   const order = await Order.findById(_id)
     .populate('products')
     .exec()
@@ -65,47 +54,40 @@ async function get (_id) {
   return order
 }
 
-/**
- * Create an order
- * @param {Object} order
- * @returns {Promise<Object>}
- */
+
 async function create (fields) {
   const order = await new Order(fields).save()
   await order.populate('products')
   return order
 }
 
-async function edit(_id, change) {
-  const order = await get(_id); // Get the existing order
-
-  if (!order) {
-    throw new Error(`Order with ID ${_id} not found`);
+async function edit(_id, changes) {
+    const updatedOrder = await Order.findByIdAndUpdate(
+      _id,
+      changes,
+      { new: true } // Ensures the returned document is the updated one
+    )
+      .populate('products') // Populates the `products` field with associated data
+      .exec();
+  
+    if (!updatedOrder) {
+      throw new Error(`Order with id ${_id} not found`);
+    }
+  
+    return updatedOrder;
   }
-
-  // Apply changes to the order
-  Object.keys(change).forEach((key) => {
-    order[key] = change[key];
-  });
-
-  // Save the updated order
-  await order.save();
-
-  // Populate the products field before returning
-  await order.populate('products').execPopulate();
-
-  return order;
-}
-async function destroy(_id) {
-  const result = await Order.deleteOne({ _id });
-
-  if (result.deletedCount === 0) {
-    throw new Error(`Order with ID ${_id} not found`);
+  
+  async function destroy(_id) {
+    const deletedOrder = await Order.findByIdAndDelete(_id).exec();
+  
+    if (!deletedOrder) {
+      throw new Error(`Order with id ${_id} not found`);
+    }
   }
-}
+  
 module.exports = {
-    get,
     create,
+    get,
     list,
     edit,
     destroy

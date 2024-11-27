@@ -50,29 +50,20 @@ async function getProduct(req, res, next) {
  * @param {object} req 
  * @param {object} res 
  */
-async function createProduct (req, res, next) {
+async function createProduct(req, res) {
   const product = await Products.create(req.body)
   res.json(product)
 }
 
-/**
- * Edit a product
- * @param {object} req
- * @param {object} res
- * @param {function} next
- */
-async function editProduct (req, res, next) {
+
+async function editProduct(req, res, next) {
   const change = req.body
   const product = await Products.edit(req.params.id, change)
   res.json(product)
 }
-/**
- * Delete a product
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
- */
-async function deleteProduct (req, res, next) {
+
+
+async function deleteProduct(req, res, next) {
   const response = await Products.destroy(req.params.id)
   res.json(response)
 }
@@ -81,6 +72,25 @@ async function createOrder (req, res, next) {
   const order = await Orders.create(req.body)
   res.json(orders)
 }
+
+async function editOrder(req, res, next) {
+  try {
+    const updatedOrder = await Orders.edit(req.params.id, req.body); // Calls the `edit` method from Orders
+    res.json(updatedOrder); // Sends the updated order as JSON
+  } catch (error) {
+    next(error); // Passes errors to the error-handling middleware
+  }
+}
+
+async function deleteOrder(req, res, next) {
+  try {
+    await Orders.destroy(req.params.id); // Calls the `destroy` method from Orders
+    res.status(204).send(); // Sends a no-content response
+  } catch (error) {
+    next(error); // Passes errors to the error-handling middleware
+  }
+}
+
 
 async function listOrders (req, res, next) {
   const { offset = 0, limit = 25, productId, status } = req.query
@@ -94,25 +104,7 @@ async function listOrders (req, res, next) {
 
   res.json(orders)
 }
-async function editOrder(req, res, next) {
-  try {
-    const { id } = req.params;
-    const changes = req.body;
-    const updatedOrder = await Orders.edit(id, changes);
-    res.json(updatedOrder);
-  } catch (err) {
-    next(err);
-  }
-}
-async function deleteOrder(req, res, next) {
-  try {
-    const { id } = req.params;
-    await Orders.destroy(id); // Call the destroy method
-    res.status(204).send(); // Send a 204 No Content status
-  } catch (err) {
-    next(err); // Pass the error to the error-handling middleware
-  }
-}
+
 
 module.exports = autoCatch({
   handleRoot,
